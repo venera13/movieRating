@@ -11,5 +11,5 @@ type RatingUnitOfWork interface {
 }
 
 type UnitOfWork interface {
-	Complete(err *error) error
+	Complete(err *error)
 }

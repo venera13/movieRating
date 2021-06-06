@@ -2,28 +2,28 @@ package infrastructure
 
 import (
 	"database/sql"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"ratingservice/pkg/ratingservice/domain"
 )
 
-type unitOfWorkFactory struct {
-	client sql.DB
+func CreateUnitOfWorkFactory(db *sql.DB) domain.UnitOfWorkFactory {
+	return &UnitOfWorkFactory{
+		client: db,
+	}
+}
+
+type UnitOfWorkFactory struct {
+	client *sql.DB
 }
 
 type unitOfWork struct {
 	transaction Transaction
 }
 
-func (u *unitOfWorkFactory) NewUnitOfWork() (domain.RatingUnitOfWork, error) {
-	log.Info("NewUnitOfWork start")
+func (u *UnitOfWorkFactory) NewUnitOfWork() (domain.RatingUnitOfWork, error) {
 	transaction, err := u.client.Begin()
 	if err != nil {
 		return nil, err
 	}
-	log.WithFields(log.Fields{
-		"NewUnitOfWork exit": transaction,
-	}).Info("NewUnitOfWork exit")
 	return &unitOfWork{transaction: transaction}, nil
 }
 
@@ -35,13 +35,12 @@ func (u *unitOfWork) MovieAdapter() domain.MovieAdapter {
 	return &MovieRepository{transaction: u.transaction}
 }
 
-func (u *unitOfWork) Complete(err *error) error {
-	if err != nil {
+func (u *unitOfWork) Complete(err *error) {
+	if *err != nil {
 		err2 := u.transaction.Rollback()
-		if err2 != nil {
-			return errors.Wrap(*err, err2.Error())
-		}
-		return *err
+		err = &err2
+	} else {
+		err2 := u.transaction.Commit()
+		err = &err2
 	}
-	return errors.WithStack(u.transaction.Commit())
 }

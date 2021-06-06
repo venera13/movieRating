@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"ratingservice/pkg/ratingservice/application/data"
 	"ratingservice/pkg/ratingservice/application/errors"
 	"ratingservice/pkg/ratingservice/domain"
@@ -12,14 +11,13 @@ type RatingService struct {
 	unitOfWorkFactory domain.UnitOfWorkFactory
 }
 
-//func NewRatingService(
-//	unitOfWorkFactory domain.UnitOfWorkFactory,
-//	movieAdapter adapter.MovieAdapter,
-//) RatingService {
-//	return &ratingService{
-//		ratingRepository: ratingRepo,
-//		movieAdapter:     movieAdapter,
-//	}
+func NewRatingService(
+	unitOfWorkFactory domain.UnitOfWorkFactory,
+) RatingService {
+	return RatingService{
+		unitOfWorkFactory: unitOfWorkFactory,
+	}
+}
 
 func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 	if len(request.MovieId) == 0 {
@@ -30,22 +28,19 @@ func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 		return errors.RequiredRatingValueError
 	}
 
-	log.Info("сейчас перейдет в NewUnitOfWork")
-	log.WithFields(log.Fields{
-		"NewUnitOfWork": srv.unitOfWorkFactory,
-	}).Info("NewUnitOfWork exit")
 	unitOfWork, err := srv.unitOfWorkFactory.NewUnitOfWork()
 	if err != nil {
 		return err
 	}
 	defer func() {
-		err = unitOfWork.Complete(&err)
+		unitOfWork.Complete(&err)
 	}()
 
-	ratingService := unitOfWork.RatingRepository()
 	movieAdapter := unitOfWork.MovieAdapter()
+	ratingService := unitOfWork.RatingRepository()
 
-	movie, err := movieAdapter.Get(request.MovieId)
+	var movie *domain.Movie
+	movie, err = movieAdapter.Get(request.MovieId)
 
 	if movie == nil {
 		return errors.MovieNotFound
@@ -55,7 +50,7 @@ func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 	ratingData := domain.Rating{
 		ID:          ratingID,
 		MovieID:     request.MovieId,
-		RatingValue: "5",
+		RatingValue: request.RatingValue,
 	}
 
 	err = ratingService.AddRating(ratingData)

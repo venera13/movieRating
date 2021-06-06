@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	domain "ratingservice/pkg/ratingservice/domain"
+	"ratingservice/pkg/ratingservice/domain"
 )
 
 type MovieRepository struct {
