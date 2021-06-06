@@ -31,7 +31,7 @@ func (u *unitOfWork) RatingRepository() domain.RatingRepository {
 	return &DatabaseRepository{transaction: u.transaction}
 }
 
-func (u *unitOfWork) MovieAdapter() domain.MovieAdapter {
+func (u *unitOfWork) MovieService() domain.MovieService {
 	return &MovieRepository{transaction: u.transaction}
 }
 

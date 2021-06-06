@@ -2,7 +2,7 @@ package domain
 
 type RepositoryProvider interface {
 	RatingRepository() RatingRepository
-	MovieAdapter() MovieAdapter
+	MovieService() MovieService
 }
 
 type RatingUnitOfWork interface {

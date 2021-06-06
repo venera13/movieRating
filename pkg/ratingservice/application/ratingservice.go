@@ -36,11 +36,11 @@ func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 		unitOfWork.Complete(&err)
 	}()
 
-	movieAdapter := unitOfWork.MovieAdapter()
+	movieService := unitOfWork.MovieService()
 	ratingService := unitOfWork.RatingRepository()
 
 	var movie *domain.Movie
-	movie, err = movieAdapter.Get(request.MovieId)
+	movie, err = movieService.Get(request.MovieId)
 
 	if movie == nil {
 		return errors.MovieNotFound

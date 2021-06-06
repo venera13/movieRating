@@ -1,6 +1,6 @@
 package domain
 
-type MovieAdapter interface {
+type MovieService interface {
 	Get(id string) (*Movie, error)
 }
 

@@ -11,7 +11,7 @@ type MovieRepository struct {
 	transaction Transaction
 }
 
-func (movieAdapter *MovieRepository) Get(id string) (*domain.Movie, error) {
+func (movieService *MovieRepository) Get(id string) (*domain.Movie, error) {
 	getMovieUrl := fmt.Sprintf("http://localhost:8000/api/v1/movie/%s", id)
 	resp, err := http.Get(getMovieUrl)
 
