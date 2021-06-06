@@ -17,7 +17,7 @@ type Server struct {
 
 func NewServer(service service.RatingService) *Server {
 	return &Server{
-		service,
+		ratingService: service,
 	}
 }
 

@@ -2,32 +2,26 @@ package service
 
 import (
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"ratingservice/pkg/ratingservice/application/data"
 	"ratingservice/pkg/ratingservice/application/errors"
 	"ratingservice/pkg/ratingservice/domain"
-	adapter "ratingservice/pkg/ratingservice/domain/adapter/movieservice"
 )
 
-type RatingService interface {
-	RateTheMovie(request *data.RateTheMovieInput) error
+type RatingService struct {
+	unitOfWorkFactory domain.UnitOfWorkFactory
 }
 
-type ratingService struct {
-	ratingRepository domain.RatingRepository
-	movieAdapter     adapter.MovieAdapter
-}
+//func NewRatingService(
+//	unitOfWorkFactory domain.UnitOfWorkFactory,
+//	movieAdapter adapter.MovieAdapter,
+//) RatingService {
+//	return &ratingService{
+//		ratingRepository: ratingRepo,
+//		movieAdapter:     movieAdapter,
+//	}
 
-func NewRatingService(
-	ratingRepo domain.RatingRepository,
-	movieAdapter adapter.MovieAdapter,
-) RatingService {
-	return &ratingService{
-		ratingRepository: ratingRepo,
-		movieAdapter:     movieAdapter,
-	}
-}
-
-func (m *ratingService) RateTheMovie(request *data.RateTheMovieInput) error {
+func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 	if len(request.MovieId) == 0 {
 		return errors.RequiredMovieIdError
 	}
@@ -36,7 +30,22 @@ func (m *ratingService) RateTheMovie(request *data.RateTheMovieInput) error {
 		return errors.RequiredRatingValueError
 	}
 
-	movie, err := m.movieAdapter.Get(request.MovieId)
+	log.Info("сейчас перейдет в NewUnitOfWork")
+	log.WithFields(log.Fields{
+		"NewUnitOfWork": srv.unitOfWorkFactory,
+	}).Info("NewUnitOfWork exit")
+	unitOfWork, err := srv.unitOfWorkFactory.NewUnitOfWork()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = unitOfWork.Complete(&err)
+	}()
+
+	ratingService := unitOfWork.RatingRepository()
+	movieAdapter := unitOfWork.MovieAdapter()
+
+	movie, err := movieAdapter.Get(request.MovieId)
 
 	if movie == nil {
 		return errors.MovieNotFound
@@ -49,7 +58,7 @@ func (m *ratingService) RateTheMovie(request *data.RateTheMovieInput) error {
 		RatingValue: "5",
 	}
 
-	err = m.ratingRepository.AddRating(ratingData)
+	err = ratingService.AddRating(ratingData)
 
 	return err
 }

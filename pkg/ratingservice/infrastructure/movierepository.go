@@ -1,20 +1,17 @@
-package adapter
+package infrastructure
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	domain "ratingservice/pkg/ratingservice/domain/adapter/movieservice"
+	domain "ratingservice/pkg/ratingservice/domain"
 )
 
-func CreateMovieAdapter() domain.MovieAdapter {
-	return &Adapter{}
+type MovieRepository struct {
+	transaction Transaction
 }
 
-type Adapter struct {
-}
-
-func (movieAdapter *Adapter) Get(id string) (*domain.Movie, error) {
+func (movieAdapter *MovieRepository) Get(id string) (*domain.Movie, error) {
 	getMovieUrl := fmt.Sprintf("http://localhost:8000/api/v1/movie/%s", id)
 	resp, err := http.Get(getMovieUrl)
 

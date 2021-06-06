@@ -13,8 +13,6 @@ import (
 	"os"
 	"os/signal"
 	service "ratingservice/pkg/ratingservice/application"
-	adapter "ratingservice/pkg/ratingservice/infrastructure/adapter/movieservice"
-	"ratingservice/pkg/ratingservice/infrastructure/repository"
 	"ratingservice/pkg/ratingservice/infrastructure/transport"
 	"syscall"
 )
@@ -81,7 +79,12 @@ func startServer(config *config) (*http.Server, error) {
 		return nil, err
 	}
 
-	ratingService := service.NewRatingService(repository.CreateRatingRepository(db), adapter.CreateMovieAdapter())
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	}
+
+	ratingService := service.RatingService{}
+	//ratingService := service.NewRatingService(repository.CreateRatingRepository(db), adapter.CreateMovieAdapter())
 	router := transport.Router(transport.NewServer(
 		ratingService,
 	))
