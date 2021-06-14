@@ -15,9 +15,9 @@ type Server struct {
 	ratingService service.RatingService
 }
 
-func NewServer(service service.RatingService) *Server {
+func NewServer(ratingService service.RatingService) *Server {
 	return &Server{
-		ratingService: service,
+		ratingService: ratingService,
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	service "ratingservice/pkg/ratingservice/application"
+	"ratingservice/pkg/ratingservice/application/provider"
 	"ratingservice/pkg/ratingservice/infrastructure"
 	"ratingservice/pkg/ratingservice/infrastructure/transport"
 	"syscall"
@@ -84,7 +85,11 @@ func startServer(config *config) (*http.Server, error) {
 		log.Fatal(err)
 	}
 
-	ratingService := service.NewRatingService(infrastructure.CreateUnitOfWorkFactory(db))
+	movieProvider := provider.NewMovieProvider()
+	ratingService := service.NewRatingService(
+		infrastructure.CreateUnitOfWorkFactory(db),
+		movieProvider,
+	)
 	router := transport.Router(transport.NewServer(
 		ratingService,
 	))

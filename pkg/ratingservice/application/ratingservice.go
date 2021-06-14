@@ -4,18 +4,23 @@ import (
 	"github.com/google/uuid"
 	"ratingservice/pkg/ratingservice/application/data"
 	"ratingservice/pkg/ratingservice/application/errors"
+	"ratingservice/pkg/ratingservice/application/provider"
+	"ratingservice/pkg/ratingservice/application/unitofwork"
 	"ratingservice/pkg/ratingservice/domain"
 )
 
 type RatingService struct {
-	unitOfWorkFactory domain.UnitOfWorkFactory
+	unitOfWorkFactory unitofwork.UnitOfWorkFactory
+	movieProvider     provider.MovieProvider
 }
 
 func NewRatingService(
-	unitOfWorkFactory domain.UnitOfWorkFactory,
+	unitOfWorkFactory unitofwork.UnitOfWorkFactory,
+	movieProvider provider.MovieProvider,
 ) RatingService {
 	return RatingService{
 		unitOfWorkFactory: unitOfWorkFactory,
+		movieProvider:     movieProvider,
 	}
 }
 
@@ -28,7 +33,14 @@ func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 		return errors.RequiredRatingValueError
 	}
 
-	unitOfWork, err := srv.unitOfWorkFactory.NewUnitOfWork()
+	movie, err := srv.movieProvider.Get(request.MovieId)
+
+	if movie == nil {
+		return errors.MovieNotFound
+	}
+
+	var unitOfWork unitofwork.RatingUnitOfWork
+	unitOfWork, err = srv.unitOfWorkFactory.NewUnitOfWork()
 	if err != nil {
 		return err
 	}
@@ -36,15 +48,7 @@ func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 		unitOfWork.Complete(&err)
 	}()
 
-	movieService := unitOfWork.MovieService()
 	ratingService := unitOfWork.RatingRepository()
-
-	var movie *domain.Movie
-	movie, err = movieService.Get(request.MovieId)
-
-	if movie == nil {
-		return errors.MovieNotFound
-	}
 
 	ratingID := uuid.NewString()
 	ratingData := domain.Rating{

@@ -1,8 +1,11 @@
-package domain
+package unitofwork
+
+import (
+	"ratingservice/pkg/ratingservice/domain"
+)
 
 type RepositoryProvider interface {
-	RatingRepository() RatingRepository
-	MovieService() MovieService
+	RatingRepository() domain.RatingRepository
 }
 
 type RatingUnitOfWork interface {

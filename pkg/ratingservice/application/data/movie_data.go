@@ -1,8 +1,4 @@
-package domain
-
-type MovieService interface {
-	Get(id string) (*Movie, error)
-}
+package data
 
 type Movie struct {
 	ID          string

@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"ratingservice/pkg/ratingservice/domain"
+	"ratingservice/pkg/ratingservice/application/data"
 )
 
 type MovieRepository struct {
 	transaction Transaction
 }
 
-func (movieService *MovieRepository) Get(id string) (*domain.Movie, error) {
+func (movieService *MovieRepository) Get(id string) (*data.Movie, error) {
 	getMovieUrl := fmt.Sprintf("http://localhost:8000/api/v1/movie/%s", id)
 	resp, err := http.Get(getMovieUrl)
 
@@ -20,7 +20,7 @@ func (movieService *MovieRepository) Get(id string) (*domain.Movie, error) {
 	}
 	defer resp.Body.Close()
 
-	var movie domain.Movie
+	var movie data.Movie
 	err = json.NewDecoder(resp.Body).Decode(&movie)
 
 	if err != nil {
