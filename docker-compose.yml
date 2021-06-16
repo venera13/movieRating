@@ -1,0 +1,67 @@
+version: '3.3'
+
+services:
+  rating:
+    container_name: rating
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      MOVIE_SERVICE_SERVE_REST_ADDRESS: ":8000"
+      RATINGSERVICE_SERVE_REST_ADDRESS: ":8001"
+      RATINGSERVICE_MYSQL_DATABASE: "rating"
+      RATINGSERVICE_MYSQL_USER: "root"
+      RATINGSERVICE_MYSQL_PASSWORD: "12345678"
+      RATINGSERVICE_MYSQL_ADDRESS: "tcp(rating-db:3306)"
+    depends_on:
+      rating-db:
+        condition: service_healthy
+
+  rating-db:
+    image: "mysql:8.0"
+    container_name: rating-db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "rating"
+      MYSQL_ROOT_PASSWORD: "12345678"
+    healthcheck:
+      test: mysql -uroot -p12345678 -e 'SELECT 1'
+      interval: 20s
+      timeout: 1s
+    volumes:
+      - "db-data:/var/lib/mysql"
+
+  movie:
+    container_name: movie
+    labels:
+      project.git: "https://github.com/venera13/cinema.git"
+      project.build: make build
+    ports:
+      - "8000:8000"
+    environment:
+      MOVIESERVICE_SERVE_REST_ADDRESS: ":8000"
+      MOVIESERVICE_MYSQL_DATABASE: "movie"
+      MOVIESERVICE_MYSQL_USER: "root"
+      MOVIESERVICE_MYSQL_PASSWORD: "12345678"
+      MOVIESERVICE_MYSQL_ADDRESS: "tcp(movie-db:3306)"
+    depends_on:
+      movie-db:
+        condition: service_healthy
+
+  movie-db:
+    image: "mysql:8.0"
+    container_name: movie-db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "movie"
+      MYSQL_ROOT_PASSWORD: "12345678"
+    healthcheck:
+      test: mysql -uroot -p12345678 -e 'SELECT 1'
+      interval: 20s
+      timeout: 1s
+    volumes:
+      - "db-data:/var/lib/mysql"
+volumes:
+  db-data:
