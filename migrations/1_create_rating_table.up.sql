@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS rating (id VARCHAR(40), movie_id VARCHAR(40), rating_value INT, number_ratings INT, deleted_at INT);
