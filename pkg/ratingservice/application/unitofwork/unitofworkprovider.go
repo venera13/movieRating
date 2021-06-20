@@ -1,4 +1,4 @@
-package unitofwork
+package serviceunitofwork
 
 import (
 	"ratingservice/pkg/ratingservice/domain"

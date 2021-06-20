@@ -4,19 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"ratingservice/pkg/ratingservice/application/provider"
+	"ratingservice/pkg/ratingservice/infrastructure"
+	"ratingservice/pkg/ratingservice/infrastructure/transport"
+	"syscall"
+
+	service "ratingservice/pkg/ratingservice/application"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/mysql"
 	_ "github.com/golang-migrate/migrate/source/file"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"os"
-	"os/signal"
-	service "ratingservice/pkg/ratingservice/application"
-	"ratingservice/pkg/ratingservice/application/provider"
-	"ratingservice/pkg/ratingservice/infrastructure"
-	"ratingservice/pkg/ratingservice/infrastructure/transport"
-	"syscall"
 )
 
 func main() {
@@ -74,7 +76,6 @@ func startServer(config *config) (*http.Server, error) {
 	}).Info("starting the server")
 
 	db, err := createDBConn(config)
-
 	if err != nil {
 		log.Fatal(err)
 
@@ -109,14 +110,13 @@ func createDBConn(config *config) (*sql.DB, error) {
 	dataSourceName := fmt.Sprintf("%s:%s@%s/%s?multiStatements=true", config.DBUser, config.DBPass, config.DBAddress, config.DBName)
 
 	db, err := sql.Open("mysql", dataSourceName)
-
 	if err != nil {
 		log.Fatal(err)
 
 		return nil, err
 	}
 
-	err = migrations(db)
+	err = migrations(db, config)
 	if err != nil {
 		log.Fatal(err)
 
@@ -126,8 +126,11 @@ func createDBConn(config *config) (*sql.DB, error) {
 	return db, nil
 }
 
-func migrations(db *sql.DB) error {
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
+func migrations(db *sql.DB, config *config) error {
+	driver, err := mysql.WithInstance(db, &mysql.Config{
+		MigrationsTable: config.DBName,
+		DatabaseName:    config.DBName,
+	})
 	if err != nil {
 		log.Fatal(err)
 

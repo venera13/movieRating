@@ -8,12 +8,11 @@ import (
 )
 
 type MovieRepository struct {
-	transaction Transaction
 }
 
 func (movieService *MovieRepository) Get(id string) (*data.Movie, error) {
-	getMovieUrl := fmt.Sprintf("http://localhost:8000/api/v1/movie/%s", id)
-	resp, err := http.Get(getMovieUrl)
+	getMovieURL := fmt.Sprintf("http://localhost:8000/api/v1/movie/%s", id)
+	resp, err := http.Get(getMovieURL)
 
 	if err != nil {
 		return nil, err

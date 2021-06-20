@@ -4,7 +4,7 @@ type RatingRepository interface {
 	Add(ratingData Rating) error
 	Update(ratingData Rating) error
 	Get(id string) (*Rating, error)
-	GetRatingByMovieId(movieId string) (*Rating, error)
+	GetRatingByMovieID(movieID string) (*Rating, error)
 	Remove(ratingData Rating) error
 }
 

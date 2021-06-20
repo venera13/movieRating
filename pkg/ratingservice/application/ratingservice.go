@@ -11,12 +11,12 @@ import (
 )
 
 type RatingService struct {
-	unitOfWorkFactory unitofwork.UnitOfWorkFactory
+	unitOfWorkFactory serviceunitofwork.UnitOfWorkFactory
 	movieProvider     provider.MovieProvider
 }
 
 func NewRatingService(
-	unitOfWorkFactory unitofwork.UnitOfWorkFactory,
+	unitOfWorkFactory serviceunitofwork.UnitOfWorkFactory,
 	movieProvider provider.MovieProvider,
 ) RatingService {
 	return RatingService{
@@ -26,25 +26,27 @@ func NewRatingService(
 }
 
 func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
-	if len(request.MovieId) == 0 {
-		return serviceerrors.RequiredMovieIdError
+	if request.MovieID == "" {
+		return serviceerrors.ErrorRequiredMovieId
 	}
 
 	if request.RatingValue == 0 {
-		return serviceerrors.RequiredRatingValueError
+		return serviceerrors.ErrorRequiredRatingValue
 	}
 
-	movie, err := srv.movieProvider.Get(request.MovieId)
+	movie, err := srv.movieProvider.Get(request.MovieID)
 
 	if movie == nil {
-		return serviceerrors.MovieNotFound
+		return serviceerrors.ErrorMovieNotFound
 	}
 
-	var unitOfWork unitofwork.RatingUnitOfWork
+	var unitOfWork serviceunitofwork.RatingUnitOfWork
 	unitOfWork, err = srv.unitOfWorkFactory.NewUnitOfWork()
+
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		unitOfWork.Complete(&err)
 	}()
@@ -52,10 +54,10 @@ func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 	ratingService := unitOfWork.RatingRepository()
 
 	var movieRating *domain.Rating
-	movieRating, err = getRatingByMovieId(ratingService, movie.ID)
+	movieRating, err = getRatingByMovieID(ratingService, movie.ID)
 
-	if errors.Is(err, serviceerrors.MovieNotFound) {
-		err = addNewRating(ratingService, request.MovieId, request.RatingValue)
+	if errors.Is(err, serviceerrors.ErrorMovieNotFound) {
+		err = addNewRating(ratingService, request.MovieID, request.RatingValue)
 	}
 
 	if err != nil {
@@ -67,11 +69,11 @@ func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 	return err
 }
 
-func getRatingByMovieId(repository domain.RatingRepository, movieId string) (*domain.Rating, error) {
-	rating, err := repository.GetRatingByMovieId(movieId)
+func getRatingByMovieID(repository domain.RatingRepository, movieID string) (*domain.Rating, error) {
+	rating, err := repository.GetRatingByMovieID(movieID)
 
 	if errors.Is(err, domain.ErrorMovieNotFound) {
-		return rating, serviceerrors.MovieNotFound
+		return rating, serviceerrors.ErrorMovieNotFound
 	}
 
 	if err != nil {
@@ -81,13 +83,14 @@ func getRatingByMovieId(repository domain.RatingRepository, movieId string) (*do
 	return rating, nil
 }
 
-func addNewRating(repository domain.RatingRepository, movieId string, ratingValue int64) error {
+func addNewRating(repository domain.RatingRepository, movieID string, ratingValue int64) error {
 	ratingID := uuid.NewString()
 	ratingData := domain.Rating{
 		ID:            ratingID,
-		MovieID:       movieId,
+		MovieID:       movieID,
 		RatingValue:   ratingValue,
 		NumberRatings: 1,
+		DeletedAt:     "nil",
 	}
 
 	err := repository.Add(ratingData)
@@ -96,7 +99,7 @@ func addNewRating(repository domain.RatingRepository, movieId string, ratingValu
 }
 
 func addRating(repository domain.RatingRepository, movieRating *domain.Rating, ratingValue int64) error {
-	movieRating.NumberRatings = movieRating.NumberRatings + 1
+	movieRating.NumberRatings++
 	movieRating.RatingValue = calcRating(movieRating, ratingValue)
 
 	err := repository.Update(*movieRating)

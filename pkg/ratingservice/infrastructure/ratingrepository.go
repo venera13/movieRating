@@ -39,11 +39,11 @@ func (ratingRepo *DatabaseRepository) Get(id string) (*domain.Rating, error) {
 	return &rating, nil
 }
 
-func (ratingRepo *DatabaseRepository) GetRatingByMovieId(movieId string) (*domain.Rating, error) {
+func (ratingRepo *DatabaseRepository) GetRatingByMovieID(movieID string) (*domain.Rating, error) {
 	var rating domain.Rating
-	rating.MovieID = movieId
+	rating.MovieID = movieID
 	query := "SELECT id, rating_value, number_ratings FROM rating WHERE movie_id = ? "
-	row := ratingRepo.transaction.QueryRow(query, movieId)
+	row := ratingRepo.transaction.QueryRow(query, movieID)
 
 	err := row.Scan(&rating.ID, &rating.RatingValue, &rating.NumberRatings)
 
