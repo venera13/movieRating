@@ -44,7 +44,6 @@ func (u *unitOfWork) Complete(err *error) {
 	}
 
 	if err2 != nil {
-		err2 = errors.Wrap(*err, err2.Error())
-		err = &err2
+		*err = errors.Wrap(*err, err2.Error())
 	}
 }

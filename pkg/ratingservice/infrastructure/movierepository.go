@@ -7,11 +7,12 @@ import (
 	"ratingservice/pkg/ratingservice/application/data"
 )
 
-type MovieRepository struct {
-}
+type MovieRepository struct{}
+
+const DOMAIN = "http://localhost:8000"
 
 func (movieService *MovieRepository) Get(id string) (*data.Movie, error) {
-	getMovieURL := fmt.Sprintf("http://localhost:8000/api/v1/movie/%s", id)
+	getMovieURL := fmt.Sprintf(DOMAIN+"/api/v1/movie/%s", id)
 	resp, err := http.Get(getMovieURL)
 
 	if err != nil {

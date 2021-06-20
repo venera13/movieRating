@@ -27,7 +27,7 @@ func NewRatingService(
 
 func (srv *RatingService) RateTheMovie(request *data.RateTheMovieInput) error {
 	if request.MovieID == "" {
-		return serviceerrors.ErrorRequiredMovieId
+		return serviceerrors.ErrorRequiredMovieID
 	}
 
 	if request.RatingValue == 0 {

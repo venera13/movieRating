@@ -12,6 +12,11 @@ linters:
     - tagliatelle
     - wrapcheck
     - exhaustivestruct
+    - gosec
+    - noctx
+    - gofumpt
+    - gci
+    - goimports
 linters-settings:
   govet:
     check-shadowing: true
@@ -20,4 +25,5 @@ linters-settings:
   gocritic:
     enabled-tags:
       - experimental
+    disabled-tags:
       - opinionated

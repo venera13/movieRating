@@ -2,13 +2,14 @@ package transport
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	service "ratingservice/pkg/ratingservice/application"
 	"ratingservice/pkg/ratingservice/application/data"
 	"time"
+
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 type Server struct {
